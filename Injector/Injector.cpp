@@ -9,7 +9,8 @@
 #include <vector>
 #include <algorithm>
 
-#define DEBUG 1
+#define DEBUG 0
+constexpr auto TARGETEXE = "Forager.exe";
 using namespace std;
 
 vector<PROCESSENTRY32> listProcesses();
@@ -29,9 +30,11 @@ int main()
         cin >> tmp;
         return 1;
     }
-    cout << "Trying to find game..." << endl;
+    cout << "Debug privileges accepted." << endl;
+    cout << "Attempting to grab game handle..." << endl << endl;
     auto processes = listProcesses();
 
+    // debug list processes during development
 #if DEBUG
     cout << "PID\tExeName\t\tPath" << endl;
     cout << "------------------------------------------------------------" << endl;
@@ -40,8 +43,21 @@ int main()
         string path = getProcessImagePath(proc.th32ProcessID);
         cout << proc.th32ProcessID << "\t" << WCharToStr(proc.szExeFile) << "\t" << path << endl;
     }
-#endif 
+#endif
 
+    PROCESSENTRY32W foragerProcEntry;
+    for (auto& proc : processes)
+    {
+        string currExe = WCharToStr(proc.szExeFile);
+        if (currExe == TARGETEXE)
+        {
+            cout << "Found Forager process!" << endl;
+            cout << "PID\tExeName\t\tPath" << endl;
+            cout << "------------------------------------------------------------" << endl;
+            cout << proc.th32ProcessID << "\t" << currExe << "\t" << getProcessImagePath(proc.th32ProcessID) << endl << endl;
+            foragerProcEntry = proc;
+        }
+    }
 
     return 0;
 }
@@ -144,14 +160,3 @@ bool enableDebugPrivilege() {
     CloseHandle(hToken);
     return ok && GetLastError() == ERROR_SUCCESS;
 }
-
-// Run program: Ctrl + F5 or Debug > Start Without Debugging menu
-// Debug program: F5 or Debug > Start Debugging menu
-
-// Tips for Getting Started: 
-//   1. Use the Solution Explorer window to add/manage files
-//   2. Use the Team Explorer window to connect to source control
-//   3. Use the Output window to see build output and other messages
-//   4. Use the Error List window to view errors
-//   5. Go to Project > Add New Item to create new code files, or Project > Add Existing Item to add existing code files to the project
-//   6. In the future, to open this project again, go to File > Open > Project and select the .sln file
