@@ -8,10 +8,15 @@
 #include <string>
 #include <vector>
 #include <algorithm>
+#include <iomanip>
+
+using namespace std;
 
 #define DEBUG 0
-constexpr auto TARGETEXE = "Forager.exe";
-using namespace std;
+
+const string TARGETEXE = "Forager.exe";
+// currently an absolute path to my repository, later on I'll package it all into one zip.
+const string MENUDLL = "C:\\Users\\User\\source\\repos\\Injector\\Debug\\CheatMenu.dll";
 
 vector<PROCESSENTRY32> listProcesses();
 DWORD findPidByName(const wstring& name);
@@ -45,7 +50,8 @@ int main()
     }
 #endif
 
-    PROCESSENTRY32W foragerProcEntry;
+    PROCESSENTRY32W foragerProcEntry{0};
+    bool found = false;
     for (auto& proc : processes)
     {
         string currExe = WCharToStr(proc.szExeFile);
@@ -56,10 +62,65 @@ int main()
             cout << "------------------------------------------------------------" << endl;
             cout << proc.th32ProcessID << "\t" << currExe << "\t" << getProcessImagePath(proc.th32ProcessID) << endl << endl;
             foragerProcEntry = proc;
+            found = true;
         }
     }
 
-    return 0;
+    if (!found)
+    {
+        cout << "Could not locate Forager process, exiting." << endl;
+        return -1;
+    }
+
+    // open proc handle for writing
+    HANDLE hForager = OpenProcess(PROCESS_CREATE_THREAD |
+        PROCESS_QUERY_INFORMATION |
+        PROCESS_VM_OPERATION |
+        PROCESS_VM_WRITE |
+        PROCESS_VM_READ,
+        FALSE,
+        foragerProcEntry.th32ProcessID);
+
+    // this is needed for null termination as std::string does not inherently include the terminating null byte
+    auto strLen = MENUDLL.size() + 1;
+
+    // allocate space for the menu DLL's path's size 
+    auto memRegion = VirtualAllocEx(hForager, NULL, strLen, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+    
+    cout << "Found memregion at: " << memRegion << endl;
+
+    // write the DLL path to that memory region
+    WriteProcessMemory(hForager, memRegion, MENUDLL.c_str(), strLen, NULL);
+
+    // grab LoadLibraryA's addr to call it to load the DLL
+    auto loadLibraryAddr = GetProcAddress(GetModuleHandleA("kernel32.dll"), "LoadLibraryA");
+    
+    // load the library in forager to 
+    auto injectedThreadHandle = CreateRemoteThread(hForager, NULL, 0, (LPTHREAD_START_ROUTINE)loadLibraryAddr, memRegion, 0, NULL);
+
+    if (!injectedThreadHandle)
+    {
+        cout << "Failed to inject DLL, exiting." << endl;
+        return -1;
+    }
+
+    WaitForSingleObject(injectedThreadHandle, 5000);
+    DWORD exitcode = 0;
+    GetExitCodeThread(injectedThreadHandle, &exitcode);
+
+    if (exitcode != 0)
+    {
+        cout << "Thread handle: 0x" << hex << injectedThreadHandle << endl;
+        cout << "Allocated memory at: 0x" << hex << memRegion << " relative to the game." << endl;
+        cout << "Successfully injected the DLL, unloading memory and exiting." << endl;
+        VirtualFreeEx(hForager, memRegion, 0, MEM_RELEASE);
+        CloseHandle(injectedThreadHandle);
+        CloseHandle(hForager);
+    }
+    else
+        cout << "Failed ot inject DLL, exit code: {" << exitcode << "}." << endl;
+
+    return exitcode;
 }
 
 vector<PROCESSENTRY32> listProcesses()
