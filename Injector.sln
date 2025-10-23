@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.13.35913.81 d17.13
+VisualStudioVersion = 17.13.35913.81
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Injector", "Injector\Injector.vcxproj", "{FFE6AE08-A02A-4916-A904-B5E6BBC53D23}"
 EndProject
@@ -15,20 +15,20 @@ Global
 		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{FFE6AE08-A02A-4916-A904-B5E6BBC53D23}.Debug|x64.ActiveCfg = Debug|x64
-		{FFE6AE08-A02A-4916-A904-B5E6BBC53D23}.Debug|x64.Build.0 = Debug|x64
+		{FFE6AE08-A02A-4916-A904-B5E6BBC53D23}.Debug|x64.ActiveCfg = Debug|Win32
+		{FFE6AE08-A02A-4916-A904-B5E6BBC53D23}.Debug|x64.Build.0 = Debug|Win32
 		{FFE6AE08-A02A-4916-A904-B5E6BBC53D23}.Debug|x86.ActiveCfg = Debug|Win32
 		{FFE6AE08-A02A-4916-A904-B5E6BBC53D23}.Debug|x86.Build.0 = Debug|Win32
-		{FFE6AE08-A02A-4916-A904-B5E6BBC53D23}.Release|x64.ActiveCfg = Release|x64
-		{FFE6AE08-A02A-4916-A904-B5E6BBC53D23}.Release|x64.Build.0 = Release|x64
+		{FFE6AE08-A02A-4916-A904-B5E6BBC53D23}.Release|x64.ActiveCfg = Release|Win32
+		{FFE6AE08-A02A-4916-A904-B5E6BBC53D23}.Release|x64.Build.0 = Release|Win32
 		{FFE6AE08-A02A-4916-A904-B5E6BBC53D23}.Release|x86.ActiveCfg = Release|Win32
 		{FFE6AE08-A02A-4916-A904-B5E6BBC53D23}.Release|x86.Build.0 = Release|Win32
-		{B339FBA1-A327-48A5-AB68-29EBBFD05711}.Debug|x64.ActiveCfg = Debug|x64
-		{B339FBA1-A327-48A5-AB68-29EBBFD05711}.Debug|x64.Build.0 = Debug|x64
+		{B339FBA1-A327-48A5-AB68-29EBBFD05711}.Debug|x64.ActiveCfg = Debug|Win32
+		{B339FBA1-A327-48A5-AB68-29EBBFD05711}.Debug|x64.Build.0 = Debug|Win32
 		{B339FBA1-A327-48A5-AB68-29EBBFD05711}.Debug|x86.ActiveCfg = Debug|Win32
 		{B339FBA1-A327-48A5-AB68-29EBBFD05711}.Debug|x86.Build.0 = Debug|Win32
-		{B339FBA1-A327-48A5-AB68-29EBBFD05711}.Release|x64.ActiveCfg = Release|x64
-		{B339FBA1-A327-48A5-AB68-29EBBFD05711}.Release|x64.Build.0 = Release|x64
+		{B339FBA1-A327-48A5-AB68-29EBBFD05711}.Release|x64.ActiveCfg = Release|Win32
+		{B339FBA1-A327-48A5-AB68-29EBBFD05711}.Release|x64.Build.0 = Release|Win32
 		{B339FBA1-A327-48A5-AB68-29EBBFD05711}.Release|x86.ActiveCfg = Release|Win32
 		{B339FBA1-A327-48A5-AB68-29EBBFD05711}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
