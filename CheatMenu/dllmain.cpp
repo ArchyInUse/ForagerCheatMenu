@@ -15,9 +15,7 @@
 
 using namespace std;
 
-const string baseGame = "Forager.exe";
-const uintptr_t moneyBase = 0x0178E08C;
-const vector<uintptr_t> moneyOffsets = { 0x0, 0x2C, 0x10, 0x3A8, 0x0 };
+
 
 bool InstallPresentHook();
 void RemovePresentHook();
@@ -70,7 +68,7 @@ BOOL APIENTRY DllMain( HMODULE hModule,
 typedef HRESULT(__stdcall* PresentFn)(IDXGISwapChain*, UINT, UINT);
 PresentFn oPresent = nullptr;
 
-// our hook
+
 HRESULT __stdcall hkPresent(IDXGISwapChain* pSwap, UINT SyncInterval, UINT Flags) {
     static bool hookedInit = false;
     if (!hookedInit) {

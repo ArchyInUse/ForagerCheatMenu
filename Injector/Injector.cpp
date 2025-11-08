@@ -158,6 +158,7 @@ DWORD findPidByName(wstring& name)
             return pe.th32ProcessID;
         }
     }
+    return -1;
 }
 
 string getProcessImagePath(DWORD pid)
