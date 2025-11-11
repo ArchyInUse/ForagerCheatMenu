@@ -4,6 +4,7 @@
 #include <vector>
 #include <array>
 #include <TlHelp32.h>
+#include "PatchHelpers.h"
 
 #pragma comment(lib, "d3d11.lib")
 #pragma comment(lib, "dxgi.lib")
@@ -24,10 +25,23 @@ namespace offsets
 	const std::vector<uintptr_t> healthOffsets = { 0x4C, 0x2C, 0x10, 0x990, 0x1A0 };
 }
 
-namespace patches {
+namespace patchOffsets {
+
 	// base executable + healthInstruction
 	const uintptr_t healthInstruction = 0x12B8046;
 	const std::array<BYTE, 4> healthOriginalInstructions = {0xF2, 0x0F, 0x11, 0x07};
+
+	// Sell Multipliers
+	// this is the instruction (movsd [edi], xmm0) that removes items when sold
+	const uintptr_t sellMultiplierOffset = 0x12D3677;
+
+	const std::vector<BYTE> sellMultiplierInstructions = {
+		// addsd xmm0, xmm0
+		0xF2, 0x0F, 0x58, 0xC0,
+
+		// addsd xmm0, xmm0
+		0xF2, 0x0F, 0x58, 0xC0
+	};
 }
 
 uintptr_t executableBasePointer = 0;
@@ -95,11 +109,6 @@ void Controller::Init(HWND gameWnd, ID3D11Device* device, ID3D11DeviceContext* c
 	RefreshGameData();
 }
 
-void Controller::Tick()
-{
-	return;
-}
-
 void Controller::DrawMenu(FeatureSettings* settings, GameData* data)
 {
 	ImGui::SetNextWindowSize(ImVec2(500, 400), ImGuiCond_FirstUseEver);
@@ -159,12 +168,38 @@ void Controller::DrawMenu(FeatureSettings* settings, GameData* data)
 		*this->m_data->xp = xpCopy;
 	}
 
+	ImGui::Text("Multiply items in shop?");
+	ImGui::SameLine();
+	// checkboxes return true when toggled, this means i wont know if it turned off or on unless checking multiplySell
+	if (ImGui::Checkbox("##multiplyItems", &m_settings->multiplySell))
+	{
+		if (m_settings->multiplySell)
+		{
+			auto moduleBase = reinterpret_cast<uintptr_t>(GetModuleHandleA(nullptr));
+			auto addr = moduleBase + patchOffsets::sellMultiplierOffset;
+			m_settings->multiplySellPatch = Patching::InstallPatch(
+				// points to: 
+				// movsd [edi],xmm0
+				// pop edi
+				addr,
+				// size of: movsd [edi], xmm0 (4 bytes) and pop edi (1 byte), this will be moved to the new memory.
+				5,
+				patchOffsets::sellMultiplierInstructions
+			);
+		}
+		else
+		{
+			// remove patch if it exists.
+			if (m_settings->multiplySellPatch)
+				Patching::RemovePatch(m_settings->multiplySellPatch);
+		}
+	}
+
 	ImGui::End();
 }
 
 void Controller::RefreshGameData()
 {
-	// NOTE: move base pointer evaluation to init
 	if (executableBasePointer == NULL)
 	{
 		auto moduleBase = reinterpret_cast<uintptr_t>(GetModuleHandleA(nullptr));
@@ -186,33 +221,11 @@ void Controller::RefreshGameData()
 	this->m_data->stamina = ResolvePtr<double>(
 		executableBasePtrDereffed,
 		offsets::staminaOffsets);
-
-	// found static health offset to be +512 from XP, it's unneccessary 
-	this->m_data->health = this->m_data->xp + 512;
-}
-
-void Controller::PatchMemory(uintptr_t addr, BYTE* bytes, size_t size)
-{
-
-}
-
-void Controller::PatchNOP(uintptr_t addr, size_t size)
-{
-	DWORD old;
-	if (!VirtualProtect(reinterpret_cast<LPVOID>(addr), size, PAGE_EXECUTE_READWRITE, &old))
-	{
-		OutputDebugStringA("Controller::PatchNOP - Failed to unprotect memory, returning");
-		return;
-	}
-	memset(reinterpret_cast<void*>(addr), 0x90, size);
-	DWORD tmp;
-	VirtualProtect(reinterpret_cast<LPVOID>(addr), size, old, &tmp);
-	FlushInstructionCache(GetCurrentProcess(), reinterpret_cast<LPCVOID>(addr), size);
 }
 
 void Controller::Render()
 { 
-	OutputDebugStringA("Controller::Render - entry\n");
+	/*OutputDebugStringA("Controller::Render - entry\n");*/
 	if (!m_init)
 	{
 		OutputDebugStringA("Controller::Render - NOT inited");
@@ -287,4 +300,7 @@ uintptr_t Controller::GetModuleEntryVA(const char* moduleName)
 	return reinterpret_cast<uintptr_t>(mod) + GetModuleEntryRVA(moduleName);
 }
 
-
+void Controller::Tick()
+{
+	return;
+}

@@ -9,11 +9,14 @@
 #include "imgui.h"
 #include "imgui_impl_win32.h"
 #include "imgui_impl_dx11.h"
+#include "PatchHelpers.h"
 
 struct FeatureSettings
 {
 	bool lockStamina = false;
 	bool lockHealth = false;
+	bool multiplySell = false;
+	Patching::Patch* multiplySellPatch = nullptr;
 };
 
 struct GameData {
