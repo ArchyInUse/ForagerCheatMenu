@@ -18,11 +18,11 @@ namespace offsets
 	const char* executableBaseName = "Forager.exe";
 	const uintptr_t playerOffset = 0x0178E08C;
 
-	// const std::vector<uintptr_t> moneyOffsets = { 0x0, 0x2C, 0x10, 0x3A8, 0x0 };
 	const std::vector<uintptr_t> moneyOffsets = { 0x0, 0x2C, 0x10, 0x3A8, 0x0 };
 	const std::vector<uintptr_t> xpOffsets = { 0x0, 0x2c, 0x10, 0x834, 0x0 };
 	const std::vector<uintptr_t> staminaOffsets = { 0x0, 0x2c, 0x10, 0x90, 0x20 };
-	const std::vector<uintptr_t> healthOffsets = { 0x4C, 0x2C, 0x10, 0x990, 0x1A0 };
+	const std::vector<uintptr_t> healthOffsets = { 0x0, 0x2c, 0x10, 0xcc, 0x170 };
+	const std::vector<uintptr_t> damageOffsets = { 0x0, 0x2c, 0x10, 0xf0, 0x0 };
 }
 
 namespace patchOffsets {
@@ -42,6 +42,12 @@ namespace patchOffsets {
 		// addsd xmm0, xmm0
 		0xF2, 0x0F, 0x58, 0xC0
 	};
+}
+
+namespace maxValues {
+	// sizes are double to match the executables data types
+	const double MAX_HEALTH = 18.0f;
+	const double MAX_STAMINA = 216.0f;
 }
 
 uintptr_t executableBasePointer = 0;
@@ -116,8 +122,10 @@ void Controller::DrawMenu(FeatureSettings* settings, GameData* data)
 	ImGui::Text("FCM - Forager Cheat Menu");
 
 	// mostly for debug right now
+	ImGui::Text("Health: %lf", *data->health);
 	ImGui::Text("Money: %lf", *data->money);
 	ImGui::Text("Stamina: %lf", *data->stamina);
+	ImGui::Text("Damage Multiplier: %lf", *data->damage);
 
 	// stamina controls (infinite in this case means locking at 72.0 as that is the maximum from what I can gather
 	ImGui::Text("Infinite Stamina?");
@@ -126,7 +134,7 @@ void Controller::DrawMenu(FeatureSettings* settings, GameData* data)
 
 	if(m_settings->lockStamina)
 	{
-		*this->m_data->stamina = 72;
+		*this->m_data->stamina = maxValues::MAX_STAMINA;
 	}
 
 	ImGui::Text("Infinite Health?");
@@ -135,7 +143,7 @@ void Controller::DrawMenu(FeatureSettings* settings, GameData* data)
 
 	if (m_settings->lockHealth)
 	{
-		*this->m_data->health = 30;
+		*this->m_data->health = maxValues::MAX_HEALTH;
 	}
 
 	// Button Controls
@@ -195,6 +203,21 @@ void Controller::DrawMenu(FeatureSettings* settings, GameData* data)
 		}
 	}
 
+	ImGui::Text("Infinite Damage?");
+	ImGui::SameLine();
+	if (ImGui::Checkbox("##damage", &m_settings->infiniteDamage))
+	{
+		if (m_settings->infiniteDamage)
+		{
+			this->m_settings->previousDamage = *this->m_data->damage;
+			*this->m_data->damage = 100.0f;
+		}
+		else
+		{
+			*this->m_data->damage = this->m_settings->previousDamage;
+		}
+	}
+
 	ImGui::End();
 }
 
@@ -221,6 +244,14 @@ void Controller::RefreshGameData()
 	this->m_data->stamina = ResolvePtr<double>(
 		executableBasePtrDereffed,
 		offsets::staminaOffsets);
+
+	this->m_data->health = ResolvePtr<double>(
+		executableBasePtrDereffed,
+		offsets::healthOffsets);
+
+	this->m_data->damage = ResolvePtr<double>(
+		executableBasePtrDereffed,
+		offsets::damageOffsets);
 }
 
 void Controller::Render()

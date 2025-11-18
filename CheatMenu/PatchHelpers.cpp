@@ -120,7 +120,7 @@ namespace Patching
 
 		// replacement bytes for original, a jmp and NOPs 
 		auto patchBuffer = std::vector<BYTE>();
-		// patchBuffer.resize(originalInstructionLength);
+		patchBuffer.reserve(originalInstructionLength);
 		// JMP to newmemory
 		relJump(patchBuffer, addr, newMemory);
 

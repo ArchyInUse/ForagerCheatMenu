@@ -16,6 +16,8 @@ struct FeatureSettings
 	bool lockStamina = false;
 	bool lockHealth = false;
 	bool multiplySell = false;
+	bool infiniteDamage = false;
+	double previousDamage = -1;
 	Patching::Patch* multiplySellPatch = nullptr;
 };
 
@@ -24,6 +26,7 @@ struct GameData {
 	double* xp = nullptr;
 	double* stamina = nullptr;
 	double* health = nullptr;
+	double* damage = nullptr;
 };
 
 class Controller
